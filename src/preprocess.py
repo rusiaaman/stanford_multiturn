@@ -43,7 +43,6 @@ class Data():
                 continue
             
 
-        self.all_columns=list(set(doc_colnames))
 
         # Vocabulary for the databases
         from keras.preprocessing.text import Tokenizer
@@ -82,6 +81,8 @@ class Data():
          'traffic_info': 11,
          'tuesday': 3,
          'wednesday': 18}
+
+        self.all_columns = {int(v):w for w,v in Config.all_columns_wi.items()}
         Config.NUM_COL = len(self.all_columns)
         Config.CONV_VOCAB_LEN = len(self.tokenizer.word_index)+1
 
@@ -182,7 +183,7 @@ def num_op(s1,op,s2):
     except TypeError:
         return False,num1
 
-def kb_results(kb_data,kb_intent,kb_columns,pred_kb_intent,belief_state,operation):
+def kb_results(kb_data,kb_intent,columns,pred_kb_intent,belief_state,operation):
     """This function gets the kb_data, column names and intent for which the kb is received. 
     If intent identified by the bot is nto same as kb_intent no results will be returned.
     
@@ -197,14 +198,17 @@ def kb_results(kb_data,kb_intent,kb_columns,pred_kb_intent,belief_state,operatio
         return [],[]
     if kb_data is None:
         return [],[]
-    results = np.ones(len(kb_data))
+    results = [None for _ in range(len(kb_data))]
     confidence = np.ones(len(kb_data))
     # column names possiblity: {'room', 'party', 'event', 'agenda', 'date', 'time'}  
     # Note that date and time are immutable and non-comparable in current dialog, so they are treated as strings
     col_types = defaultdict(lambda: 'str')
-    if any(k not in kb_columns for k in belief_state.keys()):
+    if any(k not in columns for k in belief_state.keys()):
         return [],[]
     for k in belief_state.keys():
+        if belief_state.get(k) is None or operation.get(k) is None:
+            print(k)
+            return [],[]
         min_idx = None
         min_val = float('Inf')
         max_idx = None
@@ -212,48 +216,45 @@ def kb_results(kb_data,kb_intent,kb_columns,pred_kb_intent,belief_state,operatio
         for i,items in enumerate(kb_data):
             if results[i] == 0: continue
             if col_types[k]=='str':
-                if not (belief_state.get(k) and items.get(k) and operation.get(k) is not None):
+                if items.get(k) is None:
                     results[i]=0
-                    confidence[i]=0
-                else:
-                    results[i]=0
-                    if operation[k]==0 and close(belief_state[k],items[k]):
-                        # Doing string comparison
+                    continue
+                results[i]=0
+                if operation[k]==0 and close(belief_state[k],items[k]):
+                    # Doing string comparison
+                    results[i]=1
+                    confidence[i] = confidence[i]*sim(belief_state.get(k),items.get(k))
+                elif operation[k]==1:
+                    #Doing equal comparison extracting the first number
+                    if num_op(belief_state[k],'equal to',items[k])[0]:
                         results[i]=1
-                        confidence[i] = confidence[i]*sim(belief_state.get(k),items.get(k))
-                    elif operation[k]==1:
-                        #Doing equal comparison extracting the first number
-                        if num_op(belief_state[k],'equal to',items[k])[0]:
-                            results[i]=1
-                    elif operation[k]==2:
-                        #Doing greater than comparison extracting the first number
-                        if num_op(belief_state[k],'less than',items[k])[0]:
-                            results[i]=1
-                    elif operation[k]==3:
-                        #Doing less than comparison extracting the first number
-                        if num_op(belief_state[k],'greater than',items[k])[0]:
-                            results[i]=1
-                    elif operation[k]==4:
-                        #Doing mimum comparison extracting the first number
-                        res,val = num_op(items[k],'less than',(min_val))
-                        if res:
-                            results[i]=1
-                            if min_idx is not None:
-                                results[min_idx] = 0
-                                confidence[min_idx] = 0
-                            min_val = val
-                            min_idx = i
-                    elif operation[k]==5:
-                        #Doing maximum comparison extracting the first number
-                        res,val = num_op(items[k],'greater than',(max_val))
-                        if res:
-                            results[i]=1
-                            if max_idx is not None:
-                                results[max_idx] = 0
-                                confidence[max_idx] = 0
-                            max_val = val
-                            max_idx = i
-    
+                elif operation[k]==2:
+                    #Doing greater than comparison extracting the first number
+                    if num_op(belief_state[k],'less than',items[k])[0]:
+                        results[i]=1
+                elif operation[k]==3:
+                    #Doing less than comparison extracting the first number
+                    if num_op(belief_state[k],'greater than',items[k])[0]:
+                        results[i]=1
+                elif operation[k]==4:
+                    #Doing mimum comparison extracting the first number
+                    res,val = num_op(items[k],'less than',(min_val))
+                    if res:
+                        results[i]=1
+                        if min_idx is not None:
+                            results[min_idx] = 0
+                        min_val = val
+                        min_idx = i
+                elif operation[k]==5:
+                    #Doing maximum comparison extracting the first number
+                    res,val = num_op(items[k],'greater than',(max_val))
+                    if res:
+                        results[i]=1
+                        if max_idx is not None:
+                            results[max_idx] = 0
+                        max_val = val
+                        max_idx = i
+
            
     return np.array(results),np.array(confidence)
 

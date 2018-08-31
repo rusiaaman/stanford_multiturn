@@ -41,12 +41,12 @@ class Generator(object):
                 pred_intent = np.array([0,0,1])#softmax(np.random.normal(size=NUM_INTENTS,loc=100,scale=5))
                 bs_input = np.zeros((NUM_COL,MAX_ENTITY_LENGTH,CONV_VOCAB_LEN))
                 operation = np.zeros((NUM_COL,OPERATOR_LEN))
-                num_cols_to_have = np.random.randint(NUM_COL)
-                num_ents_to_have = [np.random.randint(MAX_ENTITY_LENGTH) for _ in range(num_cols_to_have)]
+                num_cols_to_have = np.random.randint(NUM_COL)+1
+                num_ents_to_have = [np.random.randint(MAX_ENTITY_LENGTH)+1 for _ in range(num_cols_to_have)]
                 for ii in range(num_cols_to_have):
                     col_idx = self.all_columns_wi[self.nav_cols[np.random.randint(5)]]
                     for j in range(num_ents_to_have[ii]):
-                        ix=(col_idx,MAX_ENTITY_LENGTH-j-1)
+                        ix=(col_idx,j)
                         bs_input[ix] = softmax(np.random.normal(size=CONV_VOCAB_LEN,loc=100,scale=5))
                     operation[col_idx] = softmax(np.random.normal(size=OPERATOR_LEN,loc=100,scale=5))
 
