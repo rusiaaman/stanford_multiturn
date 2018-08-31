@@ -1,0 +1,1 @@
+/home/arusia/data/glove/glove.6B.50d.txt
