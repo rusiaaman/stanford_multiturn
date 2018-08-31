@@ -2,7 +2,7 @@ import json
 import keras
 import numpy as np
 import re
-import dateutil
+from dateutil import parser
 from nltk import word_tokenize
 from tqdm import tqdm
 from collections import defaultdict
@@ -155,7 +155,7 @@ def num_op(s1,op,s2):
         m1=re.search(r'([0-9]+)',s1)
         if m1 is None:
             try:
-                num1=dateutil.parser.parse(s1)
+                num1=parser.parse(s1)
             except ValueError:
                 return False,None
         else:
@@ -167,7 +167,7 @@ def num_op(s1,op,s2):
         m2=re.search(r'([0-9]+)',s2)
         if m2 is None:
             try:
-                num2=dateutil.parser.parse(s2)
+                num2=parser.parse(s2)
             except ValueError:
                 return False ,None     
         else:

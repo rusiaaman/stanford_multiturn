@@ -21,5 +21,5 @@ def train(db_model,data,generator,epochs=10,batch_size=1):
 	db_model.fit_generator(generator(batch_size,data.dat),\
 		validation_data=generator(batch_size,data.valid_dat),\
 		steps_per_epoch=100,epochs=epochs,validation_steps=50,\
-		callbacks=[memCall(),checkpoint])
+		callbacks=[checkpoint])
 	return db_model

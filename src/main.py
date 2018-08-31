@@ -10,6 +10,8 @@ if __name__=='__main__':
     data = Data()
     data.process()
     model=get_model()
+    if Config.LOAD_MODEL:
+        model.load_weights(Config.CHECKPOINT)
     Gen = Generator(Config.all_columns_wi,data)
     train(model,data,epochs=Config.EPOCHS,batch_size=Config.BATCH_SIZE,generator=Gen.input_generator)
     model.save('model'+str(time.time())+'.h5')

@@ -7,7 +7,9 @@ class Config(object):
     OPERATOR_LEN = 6
     NUM_INTENTS = 3
     EMBEDDING_SIZE=50
-    BATCH_SIZE=4
-    EPOCHS=5
+    BATCH_SIZE=8
+    EPOCHS=30
+    LOAD_MODEL=True
+    CHECKPOINT='./db_model.h5'
     def __init__():
     	pass
