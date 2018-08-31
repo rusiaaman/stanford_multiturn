@@ -207,7 +207,6 @@ def kb_results(kb_data,kb_intent,columns,pred_kb_intent,belief_state,operation):
         return [],[]
     for k in belief_state.keys():
         if belief_state.get(k) is None or operation.get(k) is None:
-            print(k)
             return [],[]
         min_idx = None
         min_val = float('Inf')
